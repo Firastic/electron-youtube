@@ -1,128 +1,162 @@
 <template>
-  <div id="wrapper">
-    <img id="logo" src="~@/assets/logo.png" alt="electron-vue">
-    <main>
-      <div class="left-side">
-        <span class="title">
-          Welcome to your new project!
-        </span>
-        <system-information></system-information>
-      </div>
+    <div>
+        <main>
+            <div id="wrapper">
+                <b-form @submit.prevent="searchVideo">
+                    <b-input-group>
+                        <b-form-input v-model="searchForm.query" placeholder="Search Video"></b-form-input>
+                        <b-input-group-append>
+                            <b-button type="submit">
+                                Search
+                            </b-button>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-form>
+            </div>
+            <div id="maincontent">
+                <SearchResult
+                        :results="searchForm.result"
+                        @startVideo="startVideo"/>
+                <youtube v-if="this.video.id !== ''" :video-id="this.video.id" />
+            </div>
 
-      <div class="right-side">
-        <div class="doc">
-          <div class="title">Getting Started</div>
-          <p>
-            electron-vue comes packed with detailed documentation that covers everything from
-            internal configurations, using the project structure, building your application,
-            and so much more.
-          </p>
-          <button @click="open('https://simulatedgreg.gitbooks.io/electron-vue/content/')">Read the Docs</button><br><br>
-        </div>
-        <div class="doc">
-          <div class="title alt">Other Documentation</div>
-          <button class="alt" @click="open('https://electron.atom.io/docs/')">Electron</button>
-          <button class="alt" @click="open('https://vuejs.org/v2/guide/')">Vue.js</button>
-        </div>
-      </div>
-    </main>
-  </div>
+
+        </main>
+    </div>
 </template>
 
 <script>
-  import SystemInformation from './LandingPage/SystemInformation'
+    import SystemInformation from './LandingPage/SystemInformation'
+    import SearchResult from "./SearchResult";
 
-  export default {
-    name: 'landing-page',
-    components: { SystemInformation },
-    methods: {
-      open (link) {
-        this.$electron.shell.openExternal(link)
-      }
+    export default {
+        name: 'landing-page',
+        components: {SystemInformation, SearchResult},
+        data() {
+            return {
+                searchForm: {
+                    query: '',
+                    result: []
+                },
+                video: {
+                    title: '',
+                    id: ''
+                }
+            }
+        },
+        methods: {
+            searchVideo() {
+                console.log('hai')
+                const endpoint = "https://www.googleapis.com/youtube/v3/search?" + "part=snippet&key=AIzaSyAV5fnT6UOUw5ncc5XdH5g-kI0KML7F-7g&type=video&q=" + this.searchForm.query
+                this.$axios.get(endpoint).then((response) => {
+                    let idx
+                    this.searchForm.result = []
+                    for (idx in response.data.items) {
+                        const val = response.data.items[idx]
+                        this.searchForm.result.push({
+                            title: val.snippet.title,
+                            videoId: val.id.videoId,
+                            thumbnails: val.snippet.thumbnails.default.url
+                        })
+                    }
+                    console.log(this.searchForm.result)
+                })
+            },
+            startVideo(videoId) {
+                this.video.id = videoId
+                this.searchForm.result = []
+            }
+        }
     }
-  }
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
+    @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
-  body { font-family: 'Source Sans Pro', sans-serif; }
+    body {
+        font-family: 'Source Sans Pro', sans-serif;
+    }
 
-  #wrapper {
-    background:
-      radial-gradient(
-        ellipse at top left,
-        rgba(255, 255, 255, 1) 40%,
-        rgba(229, 229, 229, .9) 100%
-      );
-    height: 100vh;
-    padding: 60px 80px;
-    width: 100vw;
-  }
+    #wrapper {
+        background: radial-gradient(
+                ellipse at top left,
+                rgba(255, 255, 255, 1) 40%,
+                rgba(229, 229, 229, .9) 100%
+        );
+        height: 100%;
+        padding: 60px 80px;
+        width: 100%;
+    }
 
-  #logo {
-    height: auto;
-    margin-bottom: 20px;
-    width: 420px;
-  }
+    #maincontent {
+        padding: 60px 80px;
+    }
 
-  main {
-    display: flex;
-    justify-content: space-between;
-  }
+    #logo {
+        height: auto;
+        margin-bottom: 20px;
+        width: 420px;
+    }
 
-  main > div { flex-basis: 50%; }
+    main {
+        display: flex;
+        justify-content: space-between;
+    }
 
-  .left-side {
-    display: flex;
-    flex-direction: column;
-  }
+    main > div {
+        flex-basis: 50%;
+    }
 
-  .welcome {
-    color: #555;
-    font-size: 23px;
-    margin-bottom: 10px;
-  }
+    .left-side {
+        display: flex;
+        flex-direction: column;
+    }
 
-  .title {
-    color: #2c3e50;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 6px;
-  }
+    .welcome {
+        color: #555;
+        font-size: 23px;
+        margin-bottom: 10px;
+    }
 
-  .title.alt {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
+    .title {
+        color: #2c3e50;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
 
-  .doc p {
-    color: black;
-    margin-bottom: 10px;
-  }
+    .title.alt {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
 
-  .doc button {
-    font-size: .8em;
-    cursor: pointer;
-    outline: none;
-    padding: 0.75em 2em;
-    border-radius: 2em;
-    display: inline-block;
-    color: #fff;
-    background-color: #4fc08d;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-    border: 1px solid #4fc08d;
-  }
+    .doc p {
+        color: black;
+        margin-bottom: 10px;
+    }
 
-  .doc button.alt {
-    color: #42b983;
-    background-color: transparent;
-  }
+    .doc button {
+        font-size: .8em;
+        cursor: pointer;
+        outline: none;
+        padding: 0.75em 2em;
+        border-radius: 2em;
+        display: inline-block;
+        color: #fff;
+        background-color: #4fc08d;
+        transition: all 0.15s ease;
+        box-sizing: border-box;
+        border: 1px solid #4fc08d;
+    }
+
+    .doc button.alt {
+        color: #42b983;
+        background-color: transparent;
+    }
 </style>
